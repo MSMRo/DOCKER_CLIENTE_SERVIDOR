@@ -1,4 +1,5 @@
-import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+//[id].tsx
+import { Text, View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';

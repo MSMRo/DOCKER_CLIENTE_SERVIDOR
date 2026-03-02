@@ -1,7 +1,10 @@
-import { Text, View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
+//reporte.tsx
+import { Text, View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { Colors } from '../../constants/colors';
+import { useReportes } from '../../hooks/useReportes';
 
 const tiposLugar = ['Vivienda', 'Vía Pública', 'Terreno Abandonado', 'Mercado', 'Colegio', 'Otro'];
 const tiposObjeto = ['Llantas', 'Baldes', 'Plantas', 'Botellas', 'Canales', 'Otro'];
@@ -9,6 +12,7 @@ const opcionesLarvas = ['Sí, claramente', 'No estoy seguro', 'No'];
 const opcionesDengue = ['Sí', 'No lo sé', 'No'];
 
 export default function Reporte() {
+    const { enviarReporte: enviar, loading } = useReportes();
     const [tipoLugar, setTipoLugar] = useState('');
     const [tipoObjeto, setTipoObjeto] = useState('');
     const [larvas, setLarvas] = useState('');
@@ -16,6 +20,45 @@ export default function Reporte() {
     const [comentarios, setComentarios] = useState('');
     const [fotoUri, setFotoUri] = useState<string | null>(null);
     const [ubicacionObtenida, setUbicacionObtenida] = useState(false);
+    const [latitud, setLatitud] = useState<number | null>(null);
+    const [longitud, setLongitud] = useState<number | null>(null);
+
+    const obtenerUbicacion = async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Necesitamos acceso a tu ubicación para registrar el criadero.');
+            return;
+        }
+        const location = await Location.getCurrentPositionAsync({});
+        setLatitud(location.coords.latitude);
+        setLongitud(location.coords.longitude);
+        setUbicacionObtenida(true);
+    };
+
+    const onEnviar = async () => {
+        if (!latitud || !longitud) {
+            Alert.alert('Error', 'Debes capturar tu ubicación primero.');
+            return;
+        }
+        if (!tipoLugar || !tipoObjeto || !larvas || !dengueCercano) {
+            Alert.alert('Error', 'Por favor completa todos los campos obligatorios.');
+            return;
+        }
+        try {
+            await enviar({
+                latitud,
+                longitud,
+                tipo_lugar: tipoLugar,
+                tipo_objeto: tipoObjeto,
+                observa_larvas: larvas,
+                conocimiento_dengue_cercano: dengueCercano,
+                comentarios,
+            });
+            Alert.alert('¡Éxito!', 'Tu reporte fue enviado correctamente.');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        }
+    };
 
     return (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
@@ -40,7 +83,7 @@ export default function Reporte() {
             <Text style={styles.sectionLabel}>2. Ubicación del criadero</Text>
             <TouchableOpacity
                 style={[styles.locationButton, ubicacionObtenida && styles.locationButtonActive]}
-                onPress={() => setUbicacionObtenida(true)}
+                onPress={obtenerUbicacion}
             >
                 <Ionicons
                     name={ubicacionObtenida ? 'location' : 'location-outline'}
@@ -51,6 +94,12 @@ export default function Reporte() {
                     {ubicacionObtenida ? '✓ Ubicación capturada automáticamente' : 'Capturar mi ubicación GPS'}
                 </Text>
             </TouchableOpacity>
+
+            {ubicacionObtenida && latitud && (
+                <Text style={styles.coordsText}>
+                    📍 {latitud.toFixed(6)}, {longitud?.toFixed(6)}
+                </Text>
+            )}
 
             {/* Tipo de lugar */}
             <Text style={styles.sectionLabel}>3. Tipo de lugar</Text>
@@ -129,10 +178,11 @@ export default function Reporte() {
             />
 
             {/* Botón enviar */}
-            <TouchableOpacity style={styles.submitButton}>
-                <Ionicons name="send-outline" size={18} color={Colors.white} />
-                <Text style={styles.submitButtonText}>ENVIAR REPORTE</Text>
-            </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.submitButton, loading && { opacity: 0.7 }]}
+                onPress={onEnviar}
+                disabled={loading}
+            ></TouchableOpacity>
 
         </ScrollView>
     );
@@ -214,6 +264,13 @@ const styles = StyleSheet.create({
     },
     locationTextActive: {
         color: Colors.white,
+    },
+    coordsText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 12,
+        color: Colors.textLight,
+        marginTop: -14,
+        marginBottom: 20,
     },
     chipGroup: {
         flexDirection: 'row',

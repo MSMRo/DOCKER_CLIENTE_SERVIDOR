@@ -1,3 +1,4 @@
+// mis-reportes.tsx
 import { Text, View, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';

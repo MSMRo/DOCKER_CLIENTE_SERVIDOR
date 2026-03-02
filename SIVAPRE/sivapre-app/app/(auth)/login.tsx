@@ -1,14 +1,30 @@
-import { Text, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Login() {
     const router = useRouter();
+    const { handleLogin, loading } = useAuth();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+    const onSubmit = async () => {
+        if (!username || !password) {
+            Alert.alert('Error', 'Por favor ingresa tu usuario y contraseña.');
+            return;
+        }
+        try {
+            await handleLogin(username, password);
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        }
+    };
 
     return (
         <View style={styles.container}>
 
-            {/* Header */}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Text style={styles.backText}>← Volver</Text>
             </TouchableOpacity>
@@ -16,7 +32,6 @@ export default function Login() {
             <Text style={styles.title}>Iniciar Sesión</Text>
             <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
 
-            {/* Formulario */}
             <View style={styles.form}>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Usuario</Text>
@@ -25,6 +40,8 @@ export default function Login() {
                         placeholder="Ingresa tu usuario"
                         placeholderTextColor={Colors.textLight}
                         autoCapitalize="none"
+                        value={username}
+                        onChangeText={setUsername}
                     />
                 </View>
 
@@ -35,6 +52,8 @@ export default function Login() {
                         placeholder="Ingresa tu contraseña"
                         placeholderTextColor={Colors.textLight}
                         secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
                     />
                 </View>
 
@@ -43,27 +62,26 @@ export default function Login() {
                 </TouchableOpacity>
             </View>
 
-            {/* Botón principal */}
             <TouchableOpacity
-                style={styles.buttonPrimary}
-                onPress={() => router.replace('/(tabs)')}
+                style={[styles.buttonPrimary, loading && { opacity: 0.7 }]}
+                onPress={onSubmit}
+                disabled={loading}
             >
-                <Text style={styles.buttonPrimaryText}>INICIAR SESIÓN</Text>
+                <Text style={styles.buttonPrimaryText}>
+                    {loading ? 'CARGANDO...' : 'INICIAR SESIÓN'}
+                </Text>
             </TouchableOpacity>
 
-            {/* Divisor */}
             <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>o continúa con</Text>
                 <View style={styles.dividerLine} />
             </View>
 
-            {/* Google */}
             <TouchableOpacity style={styles.googleButton}>
-                <Text style={styles.googleText}>🔵 Google</Text>
+                <Text style={styles.googleText}>🔵 Continuar con Google</Text>
             </TouchableOpacity>
 
-            {/* Registro */}
             <View style={styles.registerRow}>
                 <Text style={styles.registerText}>¿No tienes cuenta? </Text>
                 <TouchableOpacity onPress={() => router.push('/(auth)/register')}>

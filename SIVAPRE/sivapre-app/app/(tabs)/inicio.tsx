@@ -2,6 +2,7 @@ import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
+import { useUsuario } from '../../hooks/useUsuario';
 
 const alertas = [
     { id: '1', zona: 'San Juan de Lurigancho', nivel: 'Alto', descripcion: 'Alta densidad de criaderos reportados esta semana.' },
@@ -17,6 +18,7 @@ const nivelColor: Record<string, string> = {
 
 export default function Inicio() {
     const router = useRouter();
+    const { usuario } = useUsuario();
 
     return (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
@@ -24,7 +26,7 @@ export default function Inicio() {
             {/* Saludo */}
             <View style={styles.saludoRow}>
                 <View>
-                    <Text style={styles.saludo}>¡Hola, Ciudadano! 👋</Text>
+                    <Text style={styles.saludo}>¡Hola, {usuario?.nombre_completo?.split(' ')[0] || 'Ciudadano'}! 👋</Text>
                     <Text style={styles.saludoSub}>Gracias por cuidar tu comunidad</Text>
                 </View>
                 <View style={styles.avatar}>

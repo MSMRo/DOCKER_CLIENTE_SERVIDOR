@@ -68,7 +68,7 @@ export default function Welcome() {
 
                 <TouchableOpacity
                     style={styles.buttonSecondary}
-                    onPress={() => router.push('/(tabs)/informacion')}
+                    onPress={() => router.push('/(auth)/register')}
                 >
                     <Text style={styles.buttonSecondaryText}>CREAR CUENTA</Text>
                 </TouchableOpacity>

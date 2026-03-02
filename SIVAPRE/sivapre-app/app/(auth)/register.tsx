@@ -1,14 +1,52 @@
-import { Text, View, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Register() {
     const router = useRouter();
+    const { handleRegistro, loading } = useAuth();
+
+    const [nombreCompleto, setNombreCompleto] = useState('');
+    const [dni, setDni] = useState('');
+    const [telefono, setTelefono] = useState('');
+    const [municipio, setMunicipio] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmarPassword, setConfirmarPassword] = useState('');
+
+    const onRegistro = async () => {
+        if (!nombreCompleto || !dni || !username || !password || !confirmarPassword) {
+            Alert.alert('Error', 'Por favor completa todos los campos obligatorios.');
+            return;
+        }
+        if (password !== confirmarPassword) {
+            Alert.alert('Error', 'Las contraseñas no coinciden.');
+            return;
+        }
+        if (dni.length !== 8) {
+            Alert.alert('Error', 'El DNI debe tener 8 dígitos.');
+            return;
+        }
+        try {
+            await handleRegistro({
+                nombre_completo: nombreCompleto,
+                dni,
+                telefono,
+                municipio,
+                username,
+                password,
+            });
+            Alert.alert('¡Éxito!', 'Cuenta creada correctamente. Inicia sesión.');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        }
+    };
 
     return (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
 
-            {/* Header */}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Text style={styles.backText}>← Volver</Text>
             </TouchableOpacity>
@@ -16,27 +54,30 @@ export default function Register() {
             <Text style={styles.title}>Crear Cuenta</Text>
             <Text style={styles.subtitle}>Únete a la vigilancia comunitaria</Text>
 
-            {/* Formulario */}
             <View style={styles.form}>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Nombre Completo</Text>
+                    <Text style={styles.label}>Nombre Completo *</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ingresa tu nombre completo"
                         placeholderTextColor={Colors.textLight}
                         autoCapitalize="words"
+                        value={nombreCompleto}
+                        onChangeText={setNombreCompleto}
                     />
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>DNI</Text>
+                    <Text style={styles.label}>DNI *</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ingresa tu DNI"
                         placeholderTextColor={Colors.textLight}
                         keyboardType="numeric"
                         maxLength={8}
+                        value={dni}
+                        onChangeText={setDni}
                     />
                 </View>
 
@@ -47,6 +88,8 @@ export default function Register() {
                         placeholder="Ingresa tu teléfono"
                         placeholderTextColor={Colors.textLight}
                         keyboardType="phone-pad"
+                        value={telefono}
+                        onChangeText={setTelefono}
                     />
                 </View>
 
@@ -57,40 +100,59 @@ export default function Register() {
                         placeholder="Ej. San Juan de Lurigancho"
                         placeholderTextColor={Colors.textLight}
                         autoCapitalize="words"
+                        value={municipio}
+                        onChangeText={setMunicipio}
                     />
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Contraseña</Text>
+                    <Text style={styles.label}>Usuario *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Crea un nombre de usuario"
+                        placeholderTextColor={Colors.textLight}
+                        autoCapitalize="none"
+                        value={username}
+                        onChangeText={setUsername}
+                    />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Contraseña *</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Crea una contraseña"
                         placeholderTextColor={Colors.textLight}
                         secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
                     />
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Confirmar Contraseña</Text>
+                    <Text style={styles.label}>Confirmar Contraseña *</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Repite tu contraseña"
                         placeholderTextColor={Colors.textLight}
                         secureTextEntry
+                        value={confirmarPassword}
+                        onChangeText={setConfirmarPassword}
                     />
                 </View>
 
             </View>
 
-            {/* Botón */}
             <TouchableOpacity
-                style={styles.buttonPrimary}
-                onPress={() => router.replace('/(tabs)')}
+                style={[styles.buttonPrimary, loading && { opacity: 0.7 }]}
+                onPress={onRegistro}
+                disabled={loading}
             >
-                <Text style={styles.buttonPrimaryText}>CREAR CUENTA</Text>
+                <Text style={styles.buttonPrimaryText}>
+                    {loading ? 'CREANDO CUENTA...' : 'CREAR CUENTA'}
+                </Text>
             </TouchableOpacity>
 
-            {/* Login */}
             <View style={styles.loginRow}>
                 <Text style={styles.loginText}>¿Ya tienes cuenta? </Text>
                 <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
@@ -110,7 +172,7 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 32,
         paddingTop: 60,
-        paddingBottom: 80,
+        paddingBottom: 40,
     },
     backButton: {
         marginBottom: 32,
